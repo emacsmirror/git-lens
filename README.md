@@ -1,5 +1,7 @@
 # Git Lens
 
+![Git Lens](git-lens.gif)
+
 A git branch browser providing a quick overview of added, deleted or
 modified between `master` and the current branch.
 
