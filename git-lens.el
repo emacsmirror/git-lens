@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2015  Peter Stiernström
 
-;; Author: Peter Stiernström <peter.stiernstrom@pidu-2.local>
+;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Keywords: vc, convenience
 ;; Version: 0.1
 ;; Package-Requires: (("emacs" "24.4"))
