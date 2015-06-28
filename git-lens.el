@@ -1,4 +1,4 @@
-;;; git-lens.el --- Show new or delete files in branch  -*- lexical-binding: t; -*-
+;;; git-lens.el --- Show new, deleted or modified files in branch  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2015  Peter Stiernström
 
