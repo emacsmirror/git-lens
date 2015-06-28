@@ -5,7 +5,7 @@
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Keywords: vc, convenience
 ;; Version: 0.1
-;; Package-Requires: (("emacs" "24.4"))
+;; Package-Requires: ((emacs "24.4"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -102,8 +102,7 @@
 (defun git-lens-fit-window-horizontally ()
  "Fit window to buffer contents horizontally."
  (interactive)
-  (let* ((lines (split-string (buffer-string) "\n" t))
-        (num-lines (length lines))
+ (let* ((lines (split-string (buffer-string) "\n" t))
         (line-lengths (mapcar 'length lines))
         (desired-width (+ 1 (apply 'max line-lengths)))
         (max-width (/ (frame-width) 2))
