@@ -36,7 +36,7 @@
 
 (defcustom git-lens-default-branch
  "master"
- "Default branch to compare the current branch to"
+ "Default branch to compare the current branch to."
  :group 'git-lens)
 
 (defvar-local git-lens-branch nil
@@ -85,7 +85,7 @@
    files)))
 
 (defun git-lens--buffer-name (branch)
- "Buffer name for git lens buffer."
+ "Construct buffer name using BRANCH for the git lens buffer."
  (format "*Git Lens: %s..%s*" branch (git-lens--current-branch)))
 
 (defun git-lens--file-at-point ()
