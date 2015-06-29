@@ -4,7 +4,7 @@
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Keywords: vc, convenience
-;; Version: 0.1
+;; Version: 0.2
 ;; Package-Requires: ((emacs "24.4"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -82,7 +82,8 @@
   (newline))
  (goto-char (point-min))
  (forward-line)
- (setq buffer-read-only t))
+ (setq buffer-read-only t)
+ (git-lens-fit-window-horizontally))
 
 (defun git-lens-added ()
  "Show added files in branch."
@@ -135,7 +136,6 @@
 (defvar git-lens-mode-map
  (let ((keymap (make-sparse-keymap)))
   (define-key keymap (kbd "<return>") 'git-lens-find-file)
-  (define-key keymap (kbd "w") 'git-lens-fit-window-horizontally)
   (define-key keymap (kbd "A") 'git-lens-added)
   (define-key keymap (kbd "D") 'git-lens-deleted)
   (define-key keymap (kbd "M") 'git-lens-modified)

@@ -11,7 +11,6 @@ Visit a git-controlled file and issue `M-x git-lens` (or bind
 it to a keybinding of your choice).
 
  - `<return>` Find file under point
- - `w` Make git lens window fit contents horizontally
  - `A` Show added files
  - `D` Show deleted files
  - `M` Show modified files
