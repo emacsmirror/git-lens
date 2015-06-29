@@ -1,10 +1,10 @@
-;;; git-lens.el --- Show new, deleted or modified files in branch  -*- lexical-binding: t; -*-
+;;; git-lens.el --- Show new, deleted or modified files in branch
 
 ;; Copyright (C) 2015  Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Keywords: vc, convenience
-;; Version: 0.2
+;; Version: 0.3
 ;; Package-Requires: ((emacs "24.4"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -23,7 +23,7 @@
 ;;; Commentary:
 
 ;; git-lens will give you a sidebar listing added, modified or deleted
-;; files in your current git branch when compared to master.
+;; files in your current git branch when compared to another branch.
 
 ;;; Code:
 
@@ -34,11 +34,35 @@
  "Face for branch files header."
  :group 'git-lens)
 
+(defcustom git-lens-default-branch
+ "master"
+ "Default branch to compare the current branch to"
+ :group 'git-lens)
+
+(defvar-local git-lens-branch nil
+ "The branch to compare current branch to.")
+
+(defun git-lens--branches ()
+ "Get available branches."
+ (let (branches)
+  (with-temp-buffer
+   (when (zerop (process-file vc-git-program nil t nil "branch"))
+    (goto-char (point-min))
+    (while (not (eobp))
+     (let ((line (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+      (unless (string-prefix-p "*" line)
+       (push (string-trim line) branches)))
+     (forward-line))))
+  branches))
+
+(defun git-lens--select-branch ()
+ "Select branch to compare to."
+ (completing-read (format "Branch (%s): " git-lens-default-branch)
+  (git-lens--branches) nil t nil nil git-lens-default-branch))
+
 (defun git-lens--root-directory ()
  "Repository root directory."
- (with-temp-buffer
-  (when (zerop (process-file vc-git-program nil t nil "rev-parse" "--show-toplevel"))
-   (string-trim (buffer-substring-no-properties (point-min) (point-max))))))
+ (expand-file-name (vc-git-root (buffer-file-name))))
 
 (defun git-lens--current-branch ()
  "Name of the current branch."
@@ -47,22 +71,22 @@
    (string-trim (buffer-substring-no-properties (point-min) (point-max))))))
 
 (defun git-lens--files (status)
- "Files with STATUS for diff between master and the current branch."
+ "Files with STATUS for diff between `git-lens-branch` and the current branch."
  (let (files)
-  (with-temp-buffer
-   (when (zerop (process-file vc-git-program nil t nil "diff" "--name-status"
-                 (concat "master.." (git-lens--current-branch))))
-    (goto-char (point-min))
-    (while (not (eobp))
-     (let ((line (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
-      (when (string-prefix-p status line)
-       (push (string-trim (string-remove-prefix status line)) files)))
-     (forward-line))))
-  files))
+  (let ((delta (concat git-lens-branch ".." (git-lens--current-branch))))
+   (with-temp-buffer
+    (when (zerop (process-file vc-git-program nil t nil "diff" "--name-status" delta))
+     (goto-char (point-min))
+     (while (not (eobp))
+      (let ((line (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+       (when (string-prefix-p status line)
+        (push (string-trim (string-remove-prefix status line)) files)))
+      (forward-line))))
+   files)))
 
-(defun git-lens--buffer-name ()
+(defun git-lens--buffer-name (branch)
  "Buffer name for git lens buffer."
- (format "*Git Lens: master..%s*" (git-lens--current-branch)))
+ (format "*Git Lens: %s..%s*" branch (git-lens--current-branch)))
 
 (defun git-lens--file-at-point ()
  "Full path to file at point in lens buffer."
@@ -75,7 +99,7 @@
  "Insert files matching STATUS and prepend buffer with HEADER."
  (setq buffer-read-only nil)
  (erase-buffer)
- (insert (propertize header 'face 'git-lens-header))
+ (insert (propertize (format "%s (compared to %s)" header git-lens-branch) 'face 'git-lens-header))
  (newline)
  (dolist (file (git-lens--files status))
   (insert file)
@@ -151,10 +175,14 @@
 (defun git-lens ()
  "Start git lens."
  (interactive)
- (split-window-horizontally)
- (switch-to-buffer (get-buffer-create (git-lens--buffer-name)))
- (git-lens-added)
- (git-lens-mode))
+ (let* ((branch (git-lens--select-branch))
+        (buffer (get-buffer-create (git-lens--buffer-name branch))))
+  (split-window-horizontally)
+  (with-current-buffer buffer
+   (git-lens-mode)
+   (setq git-lens-branch branch)
+   (git-lens-added)
+   (switch-to-buffer buffer))))
 
 (provide 'git-lens)
 ;;; git-lens.el ends here
