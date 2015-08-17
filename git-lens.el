@@ -4,7 +4,7 @@
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Keywords: vc, convenience
-;; Version: 0.3
+;; Version: 0.4
 ;; Package-Requires: ((emacs "24.4"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'subr-x)
+(require 'vc)
 
 (defface git-lens-header
  '((default :weight bold :height 1.1 :foreground "orange"))
@@ -41,6 +42,9 @@
 
 (defvar-local git-lens-branch nil
  "The branch to compare current branch to.")
+
+(defvar-local git-lens-root ""
+ "Git root directory of repository.")
 
 (defun git-lens--branches ()
  "Get available branches."
@@ -61,8 +65,10 @@
   (git-lens--branches) nil t nil nil git-lens-default-branch))
 
 (defun git-lens--root-directory ()
- "Repository root directory."
- (expand-file-name (vc-git-root (buffer-file-name))))
+ "Name of the current branch."
+ (with-temp-buffer
+  (when (zerop (process-file vc-git-program nil t nil "rev-parse" "--show-toplevel"))
+   (string-trim (buffer-substring-no-properties (point-min) (point-max))))))
 
 (defun git-lens--current-branch ()
  "Name of the current branch."
@@ -90,7 +96,7 @@
 
 (defun git-lens--file-at-point ()
  "Full path to file at point in lens buffer."
- (concat (git-lens--root-directory) "/"
+ (concat git-lens-root "/"
   (buffer-substring-no-properties
    (line-beginning-position)
    (line-end-position))))
@@ -176,11 +182,13 @@
  "Start git lens."
  (interactive)
  (let* ((branch (git-lens--select-branch))
+        (root (git-lens--root-directory))
         (buffer (get-buffer-create (git-lens--buffer-name branch))))
   (split-window-horizontally)
   (with-current-buffer buffer
    (git-lens-mode)
    (setq git-lens-branch branch)
+   (setq git-lens-root root)
    (git-lens-added)
    (switch-to-buffer buffer))))
 
