@@ -4,7 +4,7 @@
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Keywords: vc, convenience
-;; Version: 0.4
+;; Version: 0.4.1
 ;; Package-Requires: ((emacs "24.4"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -165,6 +165,7 @@
 
 (defvar git-lens-mode-map
  (let ((keymap (make-sparse-keymap)))
+  (define-key keymap (kbd "<mouse-1>") 'git-lens-find-file)
   (define-key keymap (kbd "<return>") 'git-lens-find-file)
   (define-key keymap (kbd "A") 'git-lens-added)
   (define-key keymap (kbd "D") 'git-lens-deleted)
