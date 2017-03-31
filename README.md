@@ -14,6 +14,7 @@ it to a keybinding of your choice).
  - `A` Show added files
  - `D` Show deleted files
  - `M` Show modified files
+ - `.` Show all changed files per status
  - `q` Quit
 
 ## Customize
