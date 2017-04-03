@@ -4,7 +4,7 @@
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Keywords: vc, convenience
-;; Version: 0.4.2
+;; Version: 0.5
 ;; Package-Requires: ((emacs "24.4"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -122,25 +122,7 @@
    ("D" "Deleted files" git-lens-deleted))
  "How to display git statuses.")
 
-(defun git-lens--insert (status)
- "Insert files matching STATUS and prepend buffer with HEADER."
- (setq buffer-read-only nil)
- (erase-buffer)
- (insert (propertize (format "Changes (compared to %s)" git-lens-branch) 'face 'git-lens-header))
- (newline 2)
- (insert
-  (propertize (cadr (assoc status git-lens--statuses))
-   'face (caddr (assoc status git-lens--statuses))))
- (newline)
- (dolist (file (git-lens--files status))
-  (insert file)
-  (newline))
- (goto-char (point-min))
- (forward-line)
- (setq buffer-read-only t)
- (git-lens-fit-window-horizontally))
-
-(defun git-lens-all ()
+(defun git-lens-update ()
  "Show all touched files."
  (interactive)
  (setq buffer-read-only nil)
@@ -148,33 +130,20 @@
  (insert (propertize (format "Changes (compared to %s)" git-lens-branch) 'face 'git-lens-header))
  (newline)
  (dolist (status '("A" "M" "D"))
-  (newline)
-  (insert
-   (propertize (cadr (assoc status git-lens--statuses))
-    'face (caddr (assoc status git-lens--statuses))))
-  (newline)
-  (dolist (file (git-lens--files status))
-   (insert file)
-   (newline)))
+  (let ((files (git-lens--files status)))
+   (when files
+    (newline)
+    (insert
+     (propertize (cadr (assoc status git-lens--statuses))
+      'face (caddr (assoc status git-lens--statuses))))
+    (newline)
+    (dolist (file files)
+     (insert file)
+     (newline)))))
  (goto-char (point-min))
- (forward-line)
+ (forward-line 2)
  (setq buffer-read-only t)
  (git-lens-fit-window-horizontally))
-
-(defun git-lens-added ()
- "Show added files in branch."
- (interactive)
- (git-lens--insert "A"))
-
-(defun git-lens-deleted ()
- "Show delete files in branch."
- (interactive)
- (git-lens--insert "D"))
-
-(defun git-lens-modified ()
- "Show modified files in branch."
- (interactive)
- (git-lens--insert "M"))
 
 (defun git-lens-fit-window-horizontally ()
  "Fit window to buffer contents horizontally."
@@ -213,10 +182,7 @@
  (let ((keymap (make-sparse-keymap)))
   (define-key keymap (kbd "<mouse-1>") 'git-lens-find-file)
   (define-key keymap (kbd "<return>") 'git-lens-find-file)
-  (define-key keymap (kbd "A") 'git-lens-added)
-  (define-key keymap (kbd "D") 'git-lens-deleted)
-  (define-key keymap (kbd "M") 'git-lens-modified)
-  (define-key keymap (kbd ".") 'git-lens-all)
+  (define-key keymap (kbd "g") 'git-lens-update)
   (define-key keymap (kbd "q") 'git-lens-quit)
   keymap))
 
@@ -237,7 +203,7 @@
    (git-lens-mode)
    (setq git-lens-branch branch)
    (setq git-lens-root root)
-   (git-lens-added)
+   (git-lens-update)
    (switch-to-buffer buffer))))
 
 (provide 'git-lens)
