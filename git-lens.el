@@ -4,7 +4,7 @@
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Keywords: vc, convenience
-;; Version: 0.5
+;; Version: 0.6
 ;; Package-Requires: ((emacs "24.4"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -138,7 +138,7 @@
       'face (caddr (assoc status git-lens--statuses))))
     (newline)
     (dolist (file files)
-     (insert file)
+      (insert-button file 'path file 'action 'git-lens--visit-other-window 'follow-link t)
      (newline)))))
  (goto-char (point-min))
  (forward-line 2)
@@ -158,10 +158,10 @@
     (- (window-width) (max window-min-width (- (window-width) (- (window-width) new-width)))))
    (enlarge-window-horizontally (- new-width (window-width))))))
 
-(defun git-lens-find-file ()
- "Find file at point."
+(defun git-lens--visit-other-window (button)
+ "Find file corresponding to the BUTTON clicked."
  (interactive)
- (let ((file (git-lens--file-at-point)))
+ (let ((file (button-get button 'path)))
   (if (file-exists-p file)
    (progn
     (condition-case err
@@ -180,8 +180,6 @@
 
 (defvar git-lens-mode-map
  (let ((keymap (make-sparse-keymap)))
-  (define-key keymap (kbd "<mouse-1>") 'git-lens-find-file)
-  (define-key keymap (kbd "<return>") 'git-lens-find-file)
   (define-key keymap (kbd "g") 'git-lens-update)
   (define-key keymap (kbd "q") 'git-lens-quit)
   keymap))
