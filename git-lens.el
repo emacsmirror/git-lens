@@ -4,7 +4,7 @@
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Keywords: vc, convenience
-;; Version: 0.6
+;; Version: 0.6.1
 ;; Package-Requires: ((emacs "24.4"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -109,13 +109,6 @@
  "Construct buffer name using BRANCH for the git lens buffer."
  (format "*Git Lens: %s..%s*" branch (git-lens--current-branch)))
 
-(defun git-lens--file-at-point ()
- "Full path to file at point in lens buffer."
- (concat git-lens-root "/"
-  (buffer-substring-no-properties
-   (line-beginning-position)
-   (line-end-position))))
-
 (defvar git-lens--statuses
  '(("A" "Added files" git-lens-added)
    ("M" "Modified files" git-lens-modified)
@@ -161,7 +154,7 @@
 (defun git-lens--visit-other-window (button)
  "Find file corresponding to the BUTTON clicked."
  (interactive)
- (let ((file (button-get button 'path)))
+ (let ((file (concat git-lens-root "/" (button-get button 'path))))
   (if (file-exists-p file)
    (progn
     (condition-case err
@@ -170,7 +163,7 @@
       (split-window-horizontally)
       (windmove-right)))
     (find-file file))
-   (message "Can't visit deleted file"))))
+   (message "Can't visit non-existant file"))))
 
 (defun git-lens-quit ()
  "Quit the git lens buffer."
