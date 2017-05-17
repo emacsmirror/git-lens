@@ -4,7 +4,7 @@
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Keywords: vc, convenience
-;; Version: 0.6.1
+;; Version: 0.6.2
 ;; Package-Requires: ((emacs "24.4"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -42,6 +42,11 @@
 
 (defface git-lens-modified
  '((default :weight bold :height 1.0 :foreground "#ffe329"))
+ "Face for branch files header."
+ :group 'git-lens)
+
+(defface git-lens-renamed
+ '((default :weight bold :height 1.0 :foreground "#ff79c6"))
  "Face for branch files header."
  :group 'git-lens)
 
@@ -105,6 +110,12 @@
       (forward-line))))
    files)))
 
+(defun git-lens--renamed-files ()
+  "Special handling of renamed files."
+  (mapcar
+   (lambda (it) (first (reverse (split-string it "\t" t " "))))
+   (git-lens--files "R")))
+
 (defun git-lens--buffer-name (branch)
  "Construct buffer name using BRANCH for the git lens buffer."
  (format "*Git Lens: %s..%s*" branch (git-lens--current-branch)))
@@ -112,31 +123,35 @@
 (defvar git-lens--statuses
  '(("A" "Added files" git-lens-added)
    ("M" "Modified files" git-lens-modified)
+   ("R" "Renamed files (to)" git-lens-renamed)
    ("D" "Deleted files" git-lens-deleted))
  "How to display git statuses.")
 
 (defun git-lens-update ()
- "Show all touched files."
- (interactive)
- (setq buffer-read-only nil)
- (erase-buffer)
- (insert (propertize (format "Changes (compared to %s)" git-lens-branch) 'face 'git-lens-header))
- (newline)
- (dolist (status '("A" "M" "D"))
-  (let ((files (git-lens--files status)))
-   (when files
-    (newline)
-    (insert
-     (propertize (cadr (assoc status git-lens--statuses))
-      'face (caddr (assoc status git-lens--statuses))))
-    (newline)
-    (dolist (file files)
-      (insert-button file 'path file 'action 'git-lens--visit-other-window 'follow-link t)
-     (newline)))))
- (goto-char (point-min))
- (forward-line 2)
- (setq buffer-read-only t)
- (git-lens-fit-window-horizontally))
+  "Show all touched files."
+  (interactive)
+  (setq buffer-read-only nil)
+  (erase-buffer)
+  (insert (propertize (format "Changes (compared to %s)" git-lens-branch) 'face 'git-lens-header))
+  (newline)
+  (dolist (status '("A" "M" "R" "D"))
+    (let ((files
+           (if (equal status "R")
+               (git-lens--renamed-files)
+             (git-lens--files status))))
+      (when files
+        (newline)
+        (insert
+         (propertize (cadr (assoc status git-lens--statuses))
+                     'face (caddr (assoc status git-lens--statuses))))
+        (newline)
+        (dolist (file files)
+          (insert-button file 'path file 'action 'git-lens--visit-other-window 'follow-link t)
+          (newline)))))
+  (goto-char (point-min))
+  (forward-line 2)
+  (setq buffer-read-only t)
+  (git-lens-fit-window-horizontally))
 
 (defun git-lens-fit-window-horizontally ()
  "Fit window to buffer contents horizontally."
