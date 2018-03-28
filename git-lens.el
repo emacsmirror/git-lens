@@ -1,11 +1,12 @@
-;;; git-lens.el --- Show new, deleted or modified files in branch
+;;; git-lens.el --- Show new, deleted or modified files in branch -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2015  Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Keywords: vc, convenience
-;; Version: 0.6.2
+;; Version: 0.7.0
 ;; Package-Requires: ((emacs "24.4"))
+;; Homepage: https://github.com/pidu/git-lens
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -166,19 +167,45 @@
     (- (window-width) (max window-min-width (- (window-width) (- (window-width) new-width)))))
    (enlarge-window-horizontally (- new-width (window-width))))))
 
+(defun git-lens--setup-windows ()
+ "Setup expected window configuration."
+ (condition-case err
+  (windmove-right)
+  (error
+   (split-window-horizontally)
+   (windmove-right))))
+
 (defun git-lens--visit-other-window (button)
  "Find file corresponding to the BUTTON clicked."
  (interactive)
  (let ((file (concat git-lens-root "/" (button-get button 'path))))
   (if (file-exists-p file)
    (progn
-    (condition-case err
-     (windmove-right)
-     (error
-      (split-window-horizontally)
-      (windmove-right)))
+    (git-lens--setup-windows)
     (find-file file))
    (message "Can't visit non-existant file"))))
+
+(defun git-lens-diff-other-window ()
+ "Show (magit) diff for file in other window."
+ (interactive)
+ (if (fboundp 'magit-diff)
+  (let* ((button (button-at (point)))
+         (branch git-lens-branch)
+         (file (when button (expand-file-name (button-get button 'path) git-lens-root)))
+         (file-exists (when file (file-exists-p file))))
+   (when file-exists
+    (git-lens--setup-windows)
+    (let ((same-window-regexps (list "magit-diff"))
+          (magit-display-buffer-function 'display-buffer)
+          (buffer (get-file-buffer file)))
+     (cond
+      (buffer
+       (switch-to-buffer buffer)
+       (magit-diff branch nil (list file)))
+      (t
+       (find-file file)
+       (magit-diff branch nil (list file))
+       (kill-buffer (get-file-buffer file)))))))))
 
 (defun git-lens-quit ()
  "Quit the git lens buffer."
@@ -190,6 +217,7 @@
  (let ((keymap (make-sparse-keymap)))
   (define-key keymap (kbd "g") 'git-lens-update)
   (define-key keymap (kbd "q") 'git-lens-quit)
+  (define-key keymap (kbd "C-<return>") 'git-lens-diff-other-window)
   keymap))
 
 (define-derived-mode git-lens-mode fundamental-mode "Git Lens Mode"
