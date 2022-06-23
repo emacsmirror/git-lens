@@ -4,7 +4,7 @@
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Keywords: vc, convenience
-;; Version: 0.7.1
+;; Version: 0.7.2
 ;; Package-Requires: ((emacs "24.4"))
 ;; Homepage: https://github.com/pidu/git-lens
 
@@ -57,7 +57,7 @@
  :group 'git-lens)
 
 (defcustom git-lens-default-branch
- "master"
+ "origin/master"
  "Default branch to compare the current branch to."
  :group 'git-lens)
 
@@ -78,7 +78,7 @@
       (unless (string-prefix-p "*" line)
        (push (string-trim line) branches)))
      (forward-line))))
-  branches))
+  (cons "origin/master" branches)))
 
 (defun git-lens--select-branch ()
  "Select branch to compare to."
