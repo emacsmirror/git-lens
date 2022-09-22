@@ -4,7 +4,7 @@
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Keywords: vc, convenience
-;; Version: 0.7.2
+;; Version: 0.7.3
 ;; Package-Requires: ((emacs "24.4"))
 ;; Homepage: https://github.com/pidu/git-lens
 
@@ -30,6 +30,7 @@
 
 (require 'subr-x)
 (require 'vc)
+(require 'cl-lib)
 
 (defface git-lens-header
  '((default :weight bold :height 1.1 :foreground "#2aa198"))
@@ -114,7 +115,7 @@
 (defun git-lens--renamed-files ()
   "Special handling of renamed files."
   (mapcar
-   (lambda (it) (first (reverse (split-string it "\t" t " "))))
+   (lambda (it) (cl-first (reverse (split-string it "\t" t " "))))
    (git-lens--files "R")))
 
 (defun git-lens--buffer-name (branch)
